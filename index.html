@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会話けいこ · Kaiwa Keiko</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#E4E9E7;
+    --panel:#F5F7F6;
+    --ink:#12161A;
+    --ink-soft:#5A6570;
+    --ai:#23406E;
+    --ai-deep:#16283F;
+    --celadon:#6E9B86;
+    --kihada:#D9A227;
+    --line:#C6CFCB;
+    --jp:"Shippori Mincho",serif;
+    --ui:"Zen Kaku Gothic New",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);
+       -webkit-text-size-adjust:100%}
+  .wrap{max-width:560px;margin:0 auto;padding:0 14px 40px}
+
+  /* ---- noren header ---- */
+  .noren{background:var(--ai-deep);color:#EDF1EF;margin:0 -14px 18px;padding:14px 18px 16px;
+         display:flex;align-items:baseline;justify-content:space-between;
+         border-bottom:3px solid var(--kihada)}
+  .noren b{font-family:var(--jp);font-size:22px;font-weight:700;letter-spacing:.06em}
+  .noren span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9FB3C4}
+
+  h2{font-family:var(--jp);font-size:17px;margin:22px 0 10px;font-weight:500}
+  .hint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:6px 0 14px}
+  .hint a{color:var(--ai)}
+
+  /* ---- setup ---- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pick{background:var(--panel);border:1px solid var(--line);border-radius:3px;
+        padding:11px 10px;text-align:left;font-family:var(--ui);font-size:13px;color:var(--ink);cursor:pointer}
+  .pick em{display:block;font-family:var(--jp);font-style:normal;font-size:15px;color:var(--ai);margin-bottom:3px}
+  .pick[aria-pressed=true]{background:var(--ai);border-color:var(--ai);color:#fff}
+  .pick[aria-pressed=true] em{color:var(--kihada)}
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row .pick{flex:1;text-align:center;min-width:92px}
+
+  .go{width:100%;margin-top:20px;padding:15px;border:0;border-radius:3px;background:var(--ai-deep);
+      color:#fff;font-family:var(--jp);font-size:17px;letter-spacing:.05em;cursor:pointer}
+  .go:disabled{opacity:.45}
+
+  /* ---- transcript ---- */
+  .log{margin:0 0 14px;max-height:180px;overflow-y:auto;font-size:12.5px;line-height:1.55}
+  .log p{margin:0 0 6px;padding-left:10px;border-left:2px solid var(--line);color:var(--ink-soft)}
+  .log p.me{border-left-color:var(--celadon)}
+
+  /* ---- the card (signature) ---- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .who{background:var(--ai);color:#DCE6F2;font-size:11px;letter-spacing:.12em;
+       text-transform:uppercase;padding:7px 14px}
+  .body{padding:16px 14px 14px}
+  .ja{font-family:var(--jp);font-size:26px;line-height:1.5;margin:0 0 8px;word-break:break-word}
+  .romaji{font-size:13px;color:var(--ai);letter-spacing:.02em;margin:0 0 14px}
+
+  /* fusuma panel hiding the French */
+  .fusuma{position:relative;border-top:1px dashed var(--line);padding-top:12px}
+  .fr{font-size:14px;line-height:1.5;margin:0}
+  .veil{width:100%;background:#E9EDEB;border:1px solid var(--line);border-radius:2px;
+        padding:10px;font-family:var(--ui);font-size:12px;letter-spacing:.08em;color:var(--ink-soft);
+        cursor:pointer}
+  .veil:hover{background:#DFE5E2}
+
+  .tools{display:flex;gap:8px;margin-top:14px}
+  .tools button{flex:1;background:transparent;border:1px solid var(--line);border-radius:2px;
+                padding:9px;font-family:var(--ui);font-size:12px;color:var(--ai);cursor:pointer}
+  .tools button:active{background:#DFE5E2}
+
+  .coach{margin:12px 0 0;border-left:3px solid var(--kihada);background:#FBF4E2;
+         padding:10px 12px;font-size:13px;line-height:1.5}
+
+  /* ---- mic ---- */
+  .mic{display:block;margin:22px auto 6px;width:112px;height:112px;border-radius:50%;
+       border:2px solid var(--ai-deep);background:var(--ai-deep);color:#fff;
+       font-family:var(--jp);font-size:16px;letter-spacing:.05em;cursor:pointer}
+  .mic.on{background:var(--kihada);border-color:var(--kihada);color:var(--ai-deep);
+          animation:pulse 1.1s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,162,39,.5)}50%{box-shadow:0 0 0 16px rgba(217,162,39,0)}}
+  @media (prefers-reduced-motion:reduce){.mic.on{animation:none}}
+  .heard{text-align:center;font-family:var(--jp);font-size:16px;min-height:24px;color:var(--celadon);margin:0}
+
+  /* ---- suggestions ---- */
+  .sugg{margin-top:14px;display:grid;gap:7px}
+  .sug{text-align:left;background:#fff;border:1px solid var(--line);border-left:3px solid var(--celadon);
+       border-radius:2px;padding:10px 12px;cursor:pointer;font-family:var(--ui)}
+  .sug b{display:block;font-family:var(--jp);font-size:17px;font-weight:500;margin-bottom:2px}
+  .sug i{display:block;font-style:normal;font-size:12px;color:var(--ai)}
+  .sug s{display:block;text-decoration:none;font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+  .typerow{display:flex;gap:6px;margin-top:14px}
+  .typerow input{flex:1;padding:11px;border:1px solid var(--line);border-radius:2px;
+                 font-family:var(--jp);font-size:15px;background:#fff;color:var(--ink);min-width:0}
+  .typerow button{padding:0 16px;border:0;border-radius:2px;background:var(--ai);color:#fff;
+                  font-family:var(--ui);font-size:13px;cursor:pointer}
+  .keyrow input{font-family:var(--ui);font-size:13px}
+
+  .foot{display:flex;gap:8px;margin-top:18px}
+  .foot button{flex:1;background:transparent;border:1px solid var(--line);border-radius:2px;
+               padding:10px;font-size:12px;color:var(--ink-soft);cursor:pointer}
+  .warn{background:#FBF4E2;border:1px solid var(--kihada);border-radius:2px;padding:10px 12px;
+        font-size:12.5px;line-height:1.5;margin-top:14px}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--kihada);outline-offset:2px}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="noren"><b>会話けいこ</b><span>kaiwa keiko</span></div>
+
+  <section id="setup">
+    <h2>Ta clé API Anthropic</h2>
+    <div class="typerow keyrow">
+      <input id="apikey" type="password" placeholder="sk-ant-…" autocomplete="off">
+      <button id="savekey">OK</button>
+    </div>
+    <p class="hint">La clé reste uniquement dans ce navigateur (localStorage) — elle n'est envoyée qu'à l'API Anthropic.
+      Crée-la sur <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>.
+      Ne mets jamais une clé importante sur une page publique partagée.</p>
+
+    <h2>Où sommes-nous ?</h2>
+    <div class="grid" id="scenes"></div>
+    <h2>Ton niveau aujourd'hui</h2>
+    <div class="row" id="levels"></div>
+    <p class="hint">Ton interlocuteur parle japonais. Tu réponds à voix haute — appuie sur le cercle, parle, relâche. Sans micro, tu peux écrire.</p>
+    <button class="go" id="start">はじめましょう · Commencer</button>
+    <div class="warn" id="setupwarn" hidden></div>
+  </section>
+
+  <main id="stage" hidden>
+    <div class="log" id="log"></div>
+    <div class="card">
+      <div class="who" id="who">相手 · ton interlocuteur</div>
+      <div class="body">
+        <p class="ja" id="ja">…</p>
+        <p class="romaji" id="romaji"></p>
+        <div class="fusuma">
+          <button class="veil" id="veil">VOIR LA TRADUCTION</button>
+          <p class="fr" id="fr" hidden></p>
+        </div>
+        <div class="tools">
+          <button id="replay">Réécouter</button>
+          <button id="slow">Au ralenti</button>
+        </div>
+      </div>
+    </div>
+    <div class="coach" id="coach" hidden></div>
+
+    <button class="mic" id="mic">はなす<br><span style="font-size:11px;font-family:var(--ui)">parler</span></button>
+    <p class="heard" id="heard"></p>
+
+    <div class="sugg" id="sugg"></div>
+
+    <div class="typerow">
+      <input id="textin" placeholder="ou écris ici (rōmaji ou kana)" autocomplete="off">
+      <button id="send">Envoyer</button>
+    </div>
+
+    <div class="foot">
+      <button id="repeat">Répète plus lentement</button>
+      <button id="change">Changer de scène</button>
+    </div>
+    <div class="warn" id="warn" hidden></div>
+  </main>
+</div>
+
+<script>
+const SCENES = [
+  {id:"konbini", jp:"コンビニ", fr:"Konbini — caisse, sac, réchauffer", who:"le caissier"},
+  {id:"ramen", jp:"ラーメン屋", fr:"Ramen — commander, personnaliser", who:"le patron"},
+  {id:"izakaya", jp:"居酒屋", fr:"Izakaya — boissons, plats à partager", who:"le serveur"},
+  {id:"gare", jp:"駅", fr:"Gare — billet, quai, correspondance", who:"l'agent de gare"},
+  {id:"boutique", jp:"お店", fr:"Boutique — taille, essayer, payer", who:"la vendeuse"},
+  {id:"hotel", jp:"ホテル", fr:"Hôtel — check-in, bagages, horaires", who:"la réception"},
+  {id:"chemin", jp:"道を聞く", fr:"Demander son chemin dans la rue", who:"un passant"},
+  {id:"pharmacie", jp:"薬局", fr:"Pharmacie — mal de tête, estomac", who:"le pharmacien"},
+  {id:"taxi", jp:"タクシー", fr:"Taxi — adresse, arrêt, paiement", who:"le chauffeur"},
+  {id:"smalltalk", jp:"世間話", fr:"Small talk — d'où viens-tu, ton séjour", who:"un Japonais curieux"}
+];
+const LEVELS = [
+  {id:1, jp:"ゆっくり", fr:"Très lent, 4 mots"},
+  {id:2, jp:"ふつう", fr:"Normal, phrases entières"},
+  {id:3, jp:"はやい", fr:"Vitesse réelle"}
+];
+
+let scene = null, level = 1, history = [], last = null, rate = .8, jpVoice = null, busy = false;
+let apiKey = "";
+
+const $ = id => document.getElementById(id);
+
+// ---------- API key ----------
+try{ apiKey = localStorage.getItem("kaiwa-api-key") || ""; }catch(e){}
+if(apiKey) $("apikey").value = apiKey;
+$("savekey").onclick = ()=>{
+  apiKey = $("apikey").value.trim();
+  try{ localStorage.setItem("kaiwa-api-key", apiKey); }catch(e){}
+  $("setupwarn").hidden = true;
+  refreshStart();
+};
+$("apikey").addEventListener("keydown", e=>{ if(e.key==="Enter") $("savekey").click(); });
+$("apikey").addEventListener("input", ()=>{ apiKey = $("apikey").value.trim(); refreshStart(); });
+
+function refreshStart(){ $("start").disabled = !(scene && apiKey); }
+
+// ---------- setup screen ----------
+SCENES.forEach(s=>{
+  const b=document.createElement("button");
+  b.className="pick"; b.setAttribute("aria-pressed","false");
+  b.innerHTML=`<em>${s.jp}</em>${s.fr}`;
+  b.onclick=()=>{scene=s;[...$("scenes").children].forEach(c=>c.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");refreshStart();};
+  $("scenes").appendChild(b);
+});
+LEVELS.forEach(l=>{
+  const b=document.createElement("button");
+  b.className="pick"; b.setAttribute("aria-pressed", l.id===1?"true":"false");
+  b.onclick=()=>{level=l.id;[...$("levels").children].forEach(c=>c.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); rate = l.id===1?.7:l.id===2?.85:1;};
+  b.innerHTML=`<em>${l.jp}</em>${l.fr}`;
+  $("levels").appendChild(b);
+});
+$("start").disabled=true;
+$("start").onclick=()=>{
+  apiKey = $("apikey").value.trim();
+  if(!apiKey){ $("setupwarn").hidden=false;
+    $("setupwarn").textContent="Il faut d'abord entrer ta clé API Anthropic (sk-ant-…)."; return; }
+  try{ localStorage.setItem("kaiwa-api-key", apiKey); }catch(e){}
+  $("setup").hidden=true; $("stage").hidden=false; loadVoices(); turn(null);
+};
+$("change").onclick=()=>{ history=[]; $("log").innerHTML=""; $("stage").hidden=true; $("setup").hidden=false; };
+
+// ---------- voices ----------
+function loadVoices(){
+  const pick=()=>{ const v=speechSynthesis.getVoices().filter(x=>/^ja/i.test(x.lang));
+    jpVoice = v.find(x=>/kyoko|otoya|google/i.test(x.name)) || v[0] || null;
+    if(!jpVoice) show("Aucune voix japonaise n'est installée sur cet appareil. Le texte reste lisible, mais l'audio sera absent ou approximatif. Sur iPhone : Réglages → Accessibilité → Contenu énoncé → Voix → Japonais.");
+  };
+  pick(); speechSynthesis.onvoiceschanged = pick;
+}
+function say(text, r){
+  if(!text) return;
+  try{ speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="ja-JP"; u.rate=r||rate; if(jpVoice) u.voice=jpVoice;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+$("replay").onclick=()=>last&&say(last.ja);
+$("slow").onclick=()=>last&&say(last.ja,.55);
+$("repeat").onclick=()=>send("もう一度、ゆっくりおねがいします");
+
+// ---------- speech recognition ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec=null, listening=false;
+if(SR){
+  rec=new SR(); rec.lang="ja-JP"; rec.interimResults=true; rec.continuous=false;
+  rec.onresult=e=>{ let t=""; for(const r of e.results) t+=r[0].transcript;
+    $("heard").textContent=t; if(e.results[e.results.length-1].isFinal){ stopMic(); send(t); } };
+  rec.onerror=e=>{ stopMic();
+    show(e.error==="not-allowed"
+      ? "Le micro est bloqué. Autorise le microphone pour cette page, ou écris ta réponse dans le champ ci-dessous."
+      : "Le micro n'a rien capté. Réessaie, ou écris ta réponse."); };
+  rec.onend=()=>stopMic();
+}else{
+  $("mic").disabled=true;
+  $("mic").style.opacity=".4";
+}
+function stopMic(){ listening=false; $("mic").classList.remove("on"); }
+$("mic").onclick=()=>{
+  if(!rec) return;
+  if(listening){ rec.stop(); stopMic(); return; }
+  speechSynthesis.cancel();
+  $("heard").textContent=""; listening=true; $("mic").classList.add("on");
+  try{ rec.start(); }catch(e){ stopMic(); }
+};
+
+$("send").onclick=()=>{ const v=$("textin").value.trim(); if(v){ $("textin").value=""; send(v); } };
+$("textin").addEventListener("keydown",e=>{ if(e.key==="Enter") $("send").click(); });
+$("veil").onclick=()=>{ $("veil").hidden=true; $("fr").hidden=false; };
+
+function show(msg){ $("warn").hidden=false; $("warn").textContent=msg; }
+function logLine(text, mine){
+  const p=document.createElement("p"); if(mine) p.className="me";
+  p.textContent=text; $("log").appendChild(p); $("log").scrollTop=$("log").scrollHeight;
+}
+function send(text){ logLine("→ "+text, true); turn(text); }
+
+// ---------- the brain ----------
+function systemPrompt(){
+  const speed=[ "Phrases de 3 à 5 mots maximum, vocabulaire de survie, débit très simple.",
+                "Phrases complètes mais courantes, comme on parle à un touriste.",
+                "Débit et formules réels d'un Japonais pressé, y compris les tournures de service (かしこまりました、少々お待ちください、～になります)."][level-1];
+  return `Tu joues ${scene.who} dans ce contexte : ${scene.fr} (${scene.jp}), au Japon.
+L'utilisateur est un francophone débutant qui part au Japon le 23 septembre. Il s'entraîne à l'oral.
+
+RÈGLES
+- Tu restes dans le personnage et tu parles UNIQUEMENT en japonais poli (です/ます). ${speed}
+- Une seule réplique par tour, courte. Tu poses souvent une question pour le faire parler.
+- Introduis parfois un imprévu réaliste (rupture de stock, question inattendue, sac payant, taille indisponible).
+- Si sa réponse est incompréhensible, ton personnage demande poliment de répéter.
+- Le champ "coach" est le SEUL endroit où tu sors du rôle : en français, maximum 2 lignes, corriges au plus 2 erreurs sous la forme "tu as dit X → dis plutôt Y (raison)". S'il n'y a rien à corriger, mets un encouragement court ou une note culturelle utile. Vide au premier tour.
+- Les 3 suggestions sont ce que LUI pourrait répondre maintenant, du plus simple au plus naturel, jamais identiques entre elles.
+
+RÉPONDS UNIQUEMENT PAR CET OBJET JSON, sans texte autour, sans balises markdown :
+{"ja":"ta réplique en japonais","romaji":"la même en rōmaji","fr":"traduction française","coach":"","suggestions":[{"ja":"","romaji":"","fr":""},{"ja":"","romaji":"","fr":""},{"ja":"","romaji":"","fr":""}]}`;
+}
+
+async function turn(userText){
+  if(busy) return; busy=true;
+  $("sugg").innerHTML=""; $("coach").hidden=true;
+  $("ja").textContent="…"; $("romaji").textContent=""; $("fr").hidden=true; $("veil").hidden=false;
+  if(userText) history.push({role:"user",content:userText});
+  else history.push({role:"user",content:"(La scène commence. Adresse-moi la première réplique.)"});
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key": apiKey,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000,
+        system: systemPrompt(), messages: history })
+    });
+    if(!res.ok){
+      history.pop();
+      if(res.status===401 || res.status===403)
+        show("La clé API est refusée. Vérifie-la sur console.anthropic.com, puis change-la via « Changer de scène ».");
+      else if(res.status===429)
+        show("Trop de requêtes d'un coup. Attends quelques secondes et renvoie ta phrase.");
+      else
+        show("L'API a répondu une erreur ("+res.status+"). Réessaie dans un instant.");
+      busy=false; return;
+    }
+    const data = await res.json();
+    const raw = (data.content||[]).map(c=>c.type==="text"?c.text:"").join("").trim();
+    const clean = raw.replace(/```json|```/g,"").trim();
+    const out = JSON.parse(clean.slice(clean.indexOf("{"), clean.lastIndexOf("}")+1));
+    history.push({role:"assistant",content:clean});
+    render(out);
+  }catch(e){
+    history.pop();
+    $("ja").textContent="…";
+    show("La connexion a échoué. Vérifie ta connexion internet, puis renvoie ta phrase.");
+  }
+  busy=false;
+}
+
+function render(o){
+  last=o;
+  $("who").textContent = "相手 · " + scene.who;
+  $("ja").textContent = o.ja || "";
+  $("romaji").textContent = o.romaji || "";
+  $("fr").textContent = o.fr || "";
+  logLine(o.ja||"", false);
+  say(o.ja);
+  if(o.coach){ $("coach").hidden=false; $("coach").textContent="⚑ "+o.coach; }
+  const box=$("sugg"); box.innerHTML="";
+  (o.suggestions||[]).forEach(s=>{
+    const b=document.createElement("button"); b.className="sug";
+    b.innerHTML=`<b>${s.ja||""}</b><i>${s.romaji||""}</i><s>${s.fr||""}</s>`;
+    b.onclick=()=>{ say(s.ja,.75); setTimeout(()=>send(s.ja),700); };
+    box.appendChild(b);
+  });
+}
+</script>
+</body>
+</html>
